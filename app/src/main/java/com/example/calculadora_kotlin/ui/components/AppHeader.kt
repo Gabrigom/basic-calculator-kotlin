@@ -33,8 +33,7 @@ fun AppHeader() {
 
         Text(
             text = "Esta calculadora faz operações básicas de matemática. " +
-                    "Insira dois números nos campos abaixo e escolha a operação " +
-                    "desejada para obter o resultado.",
+                    "Insira dois valores, selecione a operação desejada e clique em Calcular.",
             fontSize = 14.sp,
             color = Color(0xFF424242),
             textAlign = TextAlign.Center,

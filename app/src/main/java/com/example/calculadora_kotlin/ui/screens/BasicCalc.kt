@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.calculadora_kotlin.domain.CalculatorOperations
+import com.example.calculadora_kotlin.ui.components.CalculateButton
 import com.example.calculadora_kotlin.ui.components.CustomNumericInput
 import com.example.calculadora_kotlin.ui.components.OperationButton
 import com.example.calculadora_kotlin.ui.components.ResultDisplay
@@ -28,6 +29,9 @@ fun BasicCalc() {
     var numTwo by remember { mutableStateOf("") }
     var result by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf("") }
+
+    // Track selected operation
+    var selectedOperation by remember { mutableStateOf<OperationType?>(null) }
 
     Scaffold(
         topBar = {
@@ -48,7 +52,7 @@ fun BasicCalc() {
             CustomNumericInput(
                 value = numOne,
                 onValueChange = { numOne = it },
-                label = "Primeiro número"
+                label = "Valor 1"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -56,11 +60,12 @@ fun BasicCalc() {
             CustomNumericInput(
                 value = numTwo,
                 onValueChange = { numTwo = it },
-                label = "Segundo número"
+                label = "Valor 2"
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Operation buttons row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,89 +73,76 @@ fun BasicCalc() {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OperationButton(
-                    onPress = {
-                        handleOperation(
-                            numOne,
-                            numTwo,
-                            CalculatorOperations::add,
-                            { newResult -> result = newResult },
-                            { newError -> inputError = newError }
-                        )
-                    },
-                    symbol = "+"
+                    onSelect = { selectedOperation = OperationType.ADDITION },
+                    symbol = "+",
+                    isSelected = selectedOperation == OperationType.ADDITION
                 )
 
                 OperationButton(
-                    onPress = {
-                        handleOperation(
-                            numOne,
-                            numTwo,
-                            CalculatorOperations::subtract,
-                            { newResult -> result = newResult },
-                            { newError -> inputError = newError }
-                        )
-                    },
-                    symbol = "−"
+                    onSelect = { selectedOperation = OperationType.SUBTRACTION },
+                    symbol = "−",
+                    isSelected = selectedOperation == OperationType.SUBTRACTION
+                )
+
+                OperationButton(
+                    onSelect = { selectedOperation = OperationType.MULTIPLICATION },
+                    symbol = "×",
+                    isSelected = selectedOperation == OperationType.MULTIPLICATION
+                )
+
+                OperationButton(
+                    onSelect = { selectedOperation = OperationType.DIVISION },
+                    symbol = "÷",
+                    isSelected = selectedOperation == OperationType.DIVISION
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Result display moved above Calculate button
+            ResultDisplay(result = result, error = inputError)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                OperationButton(
-                    onPress = {
-                        handleOperation(
-                            numOne,
-                            numTwo,
-                            CalculatorOperations::multiply,
-                            { newResult -> result = newResult },
-                            { newError -> inputError = newError }
-                        )
-                    },
-                    symbol = "×"
-                )
+            // Calculate button
+            CalculateButton(
+                onClick = {
+                    // Clear previous results
+                    result = ""
+                    inputError = ""
 
-                OperationButton(
-                    onPress = {
-                        handleOperation(
-                            numOne,
-                            numTwo,
-                            CalculatorOperations::divide,
-                            { newResult -> result = newResult },
-                            { newError -> inputError = newError }
-                        )
-                    },
-                    symbol = "÷"
-                )
-            }
+                    // Perform calculation based on selected operation
+                    selectedOperation?.let { opType ->
+                        val operation: (Float, Float) -> Float = when (opType) {
+                            OperationType.ADDITION -> CalculatorOperations::add
+                            OperationType.SUBTRACTION -> CalculatorOperations::subtract
+                            OperationType.MULTIPLICATION -> CalculatorOperations::multiply
+                            OperationType.DIVISION -> CalculatorOperations::divide
+                        }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            ResultDisplay(result = result, error = inputError)
+                        // Execute calculation
+                        when (val operationResult = CalculatorOperations.performOperation(numOne, numTwo, operation)) {
+                            is CalculatorOperations.OperationResult.Success -> result = operationResult.value
+                            is CalculatorOperations.OperationResult.Error -> inputError = operationResult.message
+                        }
+                    } ?: run {
+                        inputError = "Selecione uma operação"
+                    }
+                },
+                enabled = selectedOperation != null
+            )
         }
     }
 }
 
-
-private fun handleOperation(
-    firstNumber: String,
-    secondNumber: String,
-    operation: (Float, Float) -> Float,
-    onSuccess: (String) -> Unit,
-    onError: (String) -> Unit
-) {
-    onSuccess("")
-    onError("")
-
-    when (val operationResult = CalculatorOperations.performOperation(firstNumber, secondNumber, operation)) {
-        is CalculatorOperations.OperationResult.Success -> onSuccess(operationResult.value)
-        is CalculatorOperations.OperationResult.Error -> onError(operationResult.message)
-    }
+/**
+ * Enum to represent the different operation types
+ */
+enum class OperationType {
+    ADDITION,
+    SUBTRACTION,
+    MULTIPLICATION,
+    DIVISION
 }
 
 @Preview(showBackground = true)

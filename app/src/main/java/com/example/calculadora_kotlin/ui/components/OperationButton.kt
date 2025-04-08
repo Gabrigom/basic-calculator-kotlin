@@ -18,19 +18,24 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun OperationButton(
-    onPress: () -> Unit,
+    onSelect: () -> Unit,
     symbol: String,
+    isSelected: Boolean,
     textColor: Color = Color.White,
-    backgroundColor: Color = Color(0xFF388E3C)
+    backgroundColor: Color = Color(0xFF388E3C),
+    selectedBackgroundColor: Color = Color(0xFF1B5E20)
 ) {
+    // Use selected background color if this operation is selected
+    val buttonBackground = if (isSelected) selectedBackgroundColor else backgroundColor
+
     Button(
-        onClick = onPress,
+        onClick = onSelect,
         modifier = Modifier
             .size(65.dp)
             .aspectRatio(1f),
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
+            containerColor = buttonBackground,
             contentColor = textColor
         )
     ) {
@@ -51,7 +56,18 @@ fun OperationButton(
 @Composable
 fun OperationButtonPreview() {
     OperationButton(
-        onPress = {},
-        symbol = "+"
+        onSelect = {},
+        symbol = "+",
+        isSelected = false
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SelectedOperationButtonPreview() {
+    OperationButton(
+        onSelect = {},
+        symbol = "+",
+        isSelected = true
     )
 }
